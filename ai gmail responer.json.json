@@ -1,0 +1,176 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d599f068-2f9c-4f76-a032-dae2bd5b3489",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Akk3uBsYgoIAAMhb",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        3.5
+      ],
+      "id": "2cf6e2d1-5b74-4673-b1f4-04df30b33169",
+      "name": "Get a message",
+      "webhookId": "f46323e3-2e72-4825-89fd-2b7885822b85",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Akk3uBsYgoIAAMhb",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a professional email assistant.\n\nWrite a polite and professional reply to the email below.\n\nRules:\n- Reply only to the email.\n- Do not invent information.\n- Keep the reply concise.\n- If information is missing, politely ask for it.\n- Return only the email body.\n- End with:\n\nBest regards,\nMuhammad Hasan\n\n-------------------------\n\nEmail Details\n\nFrom:\n{{ $('Gmail Trigger').item.json.From }}\n\nSubject:\n{{ $('Gmail Trigger').item.json.Subject }}\n\nEmail:\n{{ $('Gmail Trigger').item.json.snippet }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        416,
+        16
+      ],
+      "id": "45d528de-d7ba-4005-b566-2fea6c34ce31",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "groq/compound",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        288,
+        143
+      ],
+      "id": "c9256505-c6ed-440f-9925-99647657f4dd",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "gWa9ilZnym93yiCf",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "==\"Re: \" + $node[\"Get Message\"].json.payload.headers.find(h => h.name === \"Subject\").value",
+        "message": "={{$node[\"AI Agent\"].json.output}}",
+        "options": {
+          "replyTo": "={{ $('Gmail Trigger').item.json.From }}",
+          "threadId": "={{$node[\"Get a message\"].json.threadId}}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        64
+      ],
+      "id": "e520518a-d5c8-449a-b149-27e6fed78631",
+      "name": "Create a draft",
+      "webhookId": "33e66283-f290-41ad-a69a-90629c52c39c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Akk3uBsYgoIAAMhb",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a message": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "fe2a8b68-e5f8-4175-893e-8314c2cb4ebe",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8a5d6127092dddd971619539cc277eecd886de7c9eceb1ad05bf8a6f49ceb941"
+  },
+  "nodeGroups": [],
+  "id": "YETe88QXbAO90DZu",
+  "tags": []
+}
